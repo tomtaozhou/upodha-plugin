@@ -1,6 +1,6 @@
 # UPODHA-Plugin
 
-Contributors: [YourName]
+Contributors: Tao Zhou
 Tags: [yourPluginTags, e.g., utility, customization]
 Requires at least: [MinimumWPVersion, e.g., 5.5]
 Tested up to: [TestedWPVersion, e.g., 5.7]
