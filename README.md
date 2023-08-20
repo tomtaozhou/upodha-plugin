@@ -2,10 +2,10 @@
 
 Contributors: Tao Zhou  
 Tags: Smart Home,ActivityPub,IoT  
-Requires at least: [MinimumWPVersion, e.g., 5.5]  
-Tested up to: [TestedWPVersion, e.g., 5.7]  
-Stable tag: [YourPluginVersion, e.g., 1.0.0]  
-License: [YourLicense, e.g., GPLv3]  
+Requires at least: 5.5  
+Tested up to: 5.7  
+Stable tag: 1.0.0  
+License: GPLv3  
 
 The UPODHA plugin is designed for the Ubi-House system built on WordPress. It aims to seamlessly integrate a variety of smart home devices into the system, providing unified management and control over them.
 
