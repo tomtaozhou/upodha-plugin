@@ -1,7 +1,7 @@
 # UPODHA Plugin - Smart Home Integration for the Ubi-House System
 
 Contributors: Tao Zhou  
-Tags: [yourPluginTags, e.g., utility, customization]  
+Tags: Smart Home,ActivityPub,IoT  
 Requires at least: [MinimumWPVersion, e.g., 5.5]  
 Tested up to: [TestedWPVersion, e.g., 5.7]  
 Stable tag: [YourPluginVersion, e.g., 1.0.0]  
@@ -11,9 +11,9 @@ The UPODHA plugin is designed for the Ubi-House system built on WordPress. It ai
 
 ## Key Features
 
-- **Device Integration**: Incorporate various smart home devices into the Ubi-House system.
-- **Data Collection**: Gather device status, operational history, and environmental details from Home Assistant.
-- **Protocol Conversion**: Translates original communication protocols of devices to the ActivityPub protocol, ensuring interoperability between devices from different manufacturers and with different protocols.
+1. **Device Integration**: Incorporate various smart home devices into the Ubi-House system.
+2. **Data Collection**: Gather device status, operational history, and environmental details from Home Assistant.
+3. **Protocol Conversion**: Translates original communication protocols of devices to the ActivityPub protocol, ensuring interoperability between devices from different manufacturers and with different protocols.
 
 ## Description
 
