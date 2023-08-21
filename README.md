@@ -1,7 +1,7 @@
 # UPODHA Plugin - Smart Home Integration for the Ubi-House System
 
 Contributors: Tao Zhou  
-Tags: Smart Home, ActivityPub, IoT 
+Tags: Smart Home, ActivityPub, IoT
 Requires at least: 5.5  
 Tested up to: 5.7  
 Stable tag: 1.0.0  
