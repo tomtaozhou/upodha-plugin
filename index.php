@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: UPODHA Plugin
-Description: Plugin to add metadata to articles and send commands to Home Assistant
+Description: Integration between Ubi-House and Home Assistant for smart home management
 Version: 1.0
 Author: Tao Zhou
 */
