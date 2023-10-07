@@ -114,12 +114,64 @@ function upodha_cron_interval_minutes_callback() {
 }
 
 function fetch_homeassistant_entities() {
-    // ... [此处代码与之前相同，无需修改]
+    $home_assistant_url = get_option('home_assistant_url');
+    $api_token = get_option('home_assistant_api_token');
+    $endpoint_url = $home_assistant_url . "/api/states";
+
+    $response = wp_remote_get($endpoint_url, [
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $api_token
+        ]
+    ]);
+
+    if (is_wp_error($response)) {
+        return;
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (is_array($data)) {
+        $entities = array_column($data, 'entity_id');
+        update_option('upodha_all_entities', $entities);
+    }
 }
 
-// 获取HomeAssistant的数据并保存到WordPress
 function fetch_homeassistant_data() {
-    // ... [此处代码与之前相同，无需修改]
+    $selected_entities = get_option('upodha_selected_entities', []);
+    if (empty($selected_entities)) {
+        return;
+    }
+
+    $home_assistant_url = get_option('home_assistant_url');
+    $api_token = get_option('home_assistant_api_token');
+
+    foreach ($selected_entities as $entity_id) {
+        $endpoint_url = $home_assistant_url . "/api/states/" . $entity_id;
+
+        $response = wp_remote_get($endpoint_url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $api_token
+            ]
+        ]);
+
+        if (is_wp_error($response)) {
+            continue;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (isset($data['state'])) {
+            wp_insert_post([
+                'post_title'   => $entity_id,
+                'post_content' => $data['state'],
+                'post_status'  => 'publish'
+            ]);
+        }
+    }
 }
 
 // 添加自定义的cron间隔
@@ -138,26 +190,8 @@ function upodha_add_cron_interval($schedules) {
 add_action('update_option_upodha_cron_interval_minutes', 'update_upodha_cron_schedule', 10, 2);
 
 function update_upodha_cron_schedule($old_value, $new_value) {
-    // 先移除旧的定时任务
     $timestamp = wp_next_scheduled('upodha_fetch_homeassistant_data_cron');
     if ($timestamp) {
         wp_unschedule_event($timestamp, 'upodha_fetch_homeassistant_data_cron');
     }
-    // 根据新值安排新的定时任务
-    wp_schedule_event(time(), 'upodha_custom_interval', 'upodha_fetch_homeassistant_data_cron');
-}
-
-register_activation_hook(__FILE__, 'upodha_activate_plugin');
-register_deactivation_hook(__FILE__, 'upodha_deactivate_plugin');
-
-function upodha_activate_plugin() {
-    $interval = get_option('upodha_cron_interval_minutes', '60');
-    wp_schedule_event(time(), 'upodha_custom_interval', 'upodha_fetch_homeassistant_data_cron');
-}
-
-function upodha_deactivate_plugin() {
-    $timestamp = wp_next_scheduled('upodha_fetch_homeassistant_data_cron');
-    if ($timestamp) {
-        wp_unschedule_event($timestamp, 'upodha_fetch_homeassistant_data_cron');
-    }
-}
+    wp_schedule_event(time(), 'upodha_custom_interval', 'upod
