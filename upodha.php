@@ -33,6 +33,7 @@ function upodha_settings_page() {
     </div>
     <?php
 }
+
 // 注册设置项
 add_action('admin_init', 'upodha_settings_init');
 
@@ -77,6 +78,7 @@ function home_assistant_api_token_callback() {
     $home_assistant_api_token = get_option('home_assistant_api_token');
     echo "<input type='text' name='home_assistant_api_token' value='{$home_assistant_api_token}' />";
 }
+
 // 当文章发布时，发送请求到Home Assistant
 add_action('save_post', 'upodha_send_to_home_assistant');
 
@@ -89,7 +91,6 @@ function upodha_send_to_home_assistant($post_id) {
         $home_assistant_url = get_option('home_assistant_url');
         $api_token = get_option('home_assistant_api_token');
 
-        // 以下URL为示例，您需要根据实际情况调整
         $endpoint_url = $home_assistant_url . "/api/services/your_service/your_action";
         
         $response = wp_remote_post($endpoint_url, [
@@ -99,7 +100,43 @@ function upodha_send_to_home_assistant($post_id) {
                 'Authorization' => 'Bearer ' . $api_token
             ]
         ]);
-
-        // 可以在此处处理响应，例如记录错误等
     }
 }
+
+// 定期从HomeAssistant拉取数据
+function fetch_homeassistant_data() {
+    $home_assistant_url = get_option('home_assistant_url');
+    $api_token = get_option('home_assistant_api_token');
+    $endpoint_url = $home_assistant_url . "/api/states";
+
+    $response = wp_remote_get($endpoint_url, [
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $api_token
+        ]
+    ]);
+
+    if (is_wp_error($response)) return;
+
+    $data = wp_remote_retrieve_body($response);
+    $json_data = json_decode($data, true);
+
+    if ($json_data && is_array($json_data)) {
+        foreach ($json_data as $item) {
+            wp_insert_post([
+                'post_title'   => sanitize_text_field($item['entity_id']),
+                'post_content' => wp_kses_post($item['state']),
+                'post_status'  => 'publish',
+                'post_author'  => 1,
+                'post_type'    => 'post',
+            ]);
+        }
+    }
+}
+
+if (!wp_next_scheduled('upodha_fetch_homeassistant_data_cron')) {
+    wp_schedule_event(time(), 'hourly', 'upodha_fetch_homeassistant_data_cron');
+}
+
+add_action('upodha_fetch_homeassistant_data_cron', 'fetch_homeassistant_data');
+
