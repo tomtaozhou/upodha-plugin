@@ -194,4 +194,20 @@ function update_upodha_cron_schedule($old_value, $new_value) {
     if ($timestamp) {
         wp_unschedule_event($timestamp, 'upodha_fetch_homeassistant_data_cron');
     }
-    wp_schedule_event(time(), 'upodha_custom_interval', 'upod
+    wp_schedule_event(time(), 'upodha_custom_interval', 'upodha_fetch_homeassistant_data_cron');
+}
+
+register_activation_hook(__FILE__, 'upodha_activate_plugin');
+register_deactivation_hook(__FILE__, 'upodha_deactivate_plugin');
+
+function upodha_activate_plugin() {
+    $interval = get_option('upodha_cron_interval_minutes', '60');
+    wp_schedule_event(time(), 'upodha_custom_interval', 'upodha_fetch_homeassistant_data_cron');
+}
+
+function upodha_deactivate_plugin() {
+    $timestamp = wp_next_scheduled('upodha_fetch_homeassistant_data_cron');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'upodha_fetch_homeassistant_data_cron');
+    }
+}
