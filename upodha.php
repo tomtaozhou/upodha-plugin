@@ -20,6 +20,17 @@ function upodha_admin_menu() {
 }
 
 function upodha_settings_page() {
+    if (isset($_POST['fetch_entities'])) {
+        fetch_homeassistant_entities();
+    }
+
+    if (isset($_POST['save_entities'])) {
+        $selected_entities = $_POST['entities'] ?? [];
+        update_option('upodha_selected_entities', $selected_entities);
+    }
+
+    $selected_entities = get_option('upodha_selected_entities', []);
+    $all_entities = get_option('upodha_all_entities', []);
     ?>
     <div class="wrap">
         <h1>UPODHA Plugin Settings</h1>
@@ -29,6 +40,15 @@ function upodha_settings_page() {
             do_settings_sections('upodha-settings');
             submit_button();
             ?>
+        </form>
+        <form method="post">
+            <h2>Home Assistant Entities</h2>
+            <p>Choose the entities you want to import:</p>
+            <?php foreach ($all_entities as $entity): ?>
+                <input type="checkbox" name="entities[]" value="<?php echo esc_attr($entity); ?>" <?php checked(in_array($entity, $selected_entities)); ?>> <?php echo esc_html($entity); ?><br>
+            <?php endforeach; ?>
+            <input type="submit" name="fetch_entities" value="Fetch Entities" class="button">
+            <input type="submit" name="save_entities" value="Save Selection" class="button button-primary">
         </form>
     </div>
     <?php
@@ -79,32 +99,36 @@ function home_assistant_api_token_callback() {
     echo "<input type='text' name='home_assistant_api_token' value='{$home_assistant_api_token}' />";
 }
 
-// 当文章发布时，发送请求到Home Assistant
-add_action('save_post', 'upodha_send_to_home_assistant');
+// 获取HomeAssistant的实体列表并保存
+function fetch_homeassistant_entities() {
+    $home_assistant_url = get_option('home_assistant_url');
+    $api_token = get_option('home_assistant_api_token');
+    $endpoint_url = $home_assistant_url . "/api/states";
 
-function upodha_send_to_home_assistant($post_id) {
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    
-    $metadata = get_post_meta($post_id, 'upodha_metadata', true);
-    
-    if ($metadata) {
-        $home_assistant_url = get_option('home_assistant_url');
-        $api_token = get_option('home_assistant_api_token');
+    $response = wp_remote_get($endpoint_url, [
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $api_token
+        ]
+    ]);
 
-        $endpoint_url = $home_assistant_url . "/api/services/your_service/your_action";
-        
-        $response = wp_remote_post($endpoint_url, [
-            'body' => json_encode(['metadata' => $metadata]),
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $api_token
-            ]
-        ]);
+    if (is_wp_error($response)) return;
+
+    $data = wp_remote_retrieve_body($response);
+    $json_data = json_decode($data, true);
+
+    if ($json_data && is_array($json_data)) {
+        $entities = [];
+        foreach ($json_data as $item) {
+            $entities[] = $item['entity_id'];
+        }
+        update_option('upodha_all_entities', $entities);
     }
 }
 
 // 定期从HomeAssistant拉取数据
 function fetch_homeassistant_data() {
+    $selected_entities = get_option('upodha_selected_entities', []);
     $home_assistant_url = get_option('home_assistant_url');
     $api_token = get_option('home_assistant_api_token');
     $endpoint_url = $home_assistant_url . "/api/states";
@@ -123,13 +147,15 @@ function fetch_homeassistant_data() {
 
     if ($json_data && is_array($json_data)) {
         foreach ($json_data as $item) {
-            wp_insert_post([
-                'post_title'   => sanitize_text_field($item['entity_id']),
-                'post_content' => wp_kses_post($item['state']),
-                'post_status'  => 'publish',
-                'post_author'  => 1,
-                'post_type'    => 'post',
-            ]);
+            if (in_array($item['entity_id'], $selected_entities)) {
+                wp_insert_post([
+                    'post_title'   => sanitize_text_field($item['entity_id']),
+                    'post_content' => wp_kses_post($item['state']),
+                    'post_status'  => 'publish',
+                    'post_author'  => 1,
+                    'post_type'    => 'post',
+                ]);
+            }
         }
     }
 }
@@ -139,4 +165,3 @@ if (!wp_next_scheduled('upodha_fetch_homeassistant_data_cron')) {
 }
 
 add_action('upodha_fetch_homeassistant_data_cron', 'fetch_homeassistant_data');
-
