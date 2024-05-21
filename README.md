@@ -30,7 +30,7 @@ Within the WordPress-based Ubi-House system, the UPODHA plugin serves to:
 
 ## Usage
 
-[Provide users with specific steps and guidelines on how to use the UPODHA plugin within the Ubi-House system.]
+Provide users with specific steps and guidelines on how to use the UPODHA plugin within the Ubi-House system.
 
 ## Development & Technical Background
 
