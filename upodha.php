@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: UPODHA Plugin
+Plugin Name: UPODHA
 Description: Integration between Ubi-House and Home Assistant for smart home management
 Version: 1.0
 Author: Tao Zhou
